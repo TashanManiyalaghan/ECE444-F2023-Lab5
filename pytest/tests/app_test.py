@@ -1,4 +1,3 @@
-import os
 import pytest
 import json
 from pathlib import Path
@@ -6,6 +5,7 @@ from pathlib import Path
 from project.app import app, db
 
 TEST_DB = "test.db"
+
 
 @pytest.fixture
 def client():
@@ -15,9 +15,10 @@ def client():
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{BASE_DIR.joinpath(TEST_DB)}"
 
     with app.app_context():
-        db.create_all() # setup
-        yield app.test_client() # tests run here
-        db.drop_all() # teardown
+        db.create_all()  # setup
+        yield app.test_client()  # tests run here
+        db.drop_all()  # teardown
+
 
 def login(client, username, password):
     """Login helper function."""
@@ -27,23 +28,28 @@ def login(client, username, password):
         follow_redirects=True,
     )
 
+
 def logout(client):
     """Logout helper function."""
     return client.get("/logout", follow_redirects=True)
 
+
 def test_index(client):
     response = client.get("/", content_type="html/text")
     assert response.status_code == 200
+
 
 def test_database(client):
     """Initial test. ensure that the database exists."""
     tester = Path("test.db").is_file()
     assert tester
 
+
 def test_empty_db(client):
     """Ensure database is blank."""
     rv = client.get("/")
     assert b"No entries yet. Add some!" in rv.data
+
 
 def test_login_logout(client):
     """Test login and logout using helper functions."""
@@ -56,6 +62,7 @@ def test_login_logout(client):
     rv = login(client, app.config["USERNAME"], app.config["PASSWORD"] + "x")
     assert b"Invalid password" in rv.data
 
+
 def test_messages(client):
     """Ensure that user can post messages"""
     login(client, app.config["USERNAME"], app.config["PASSWORD"])
@@ -67,6 +74,7 @@ def test_messages(client):
     assert b"No entries here so far" not in rv.data
     assert b"&lt;Hello&gt;" in rv.data
     assert b"<strong>HTML</strong> allowed here" in rv.data
+
 
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
